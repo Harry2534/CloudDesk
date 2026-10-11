@@ -8,8 +8,18 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import Ticket
 
+from fastapi.middleware.cors import CORSMiddleware
+
+
 app = FastAPI(title="CloudDesk API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5500", "http://127.0.0.1:5500"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type"],
+)
 
 # Database connection for each request
 def get_db():

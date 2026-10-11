@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CloudDesk | IT Support</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <h1>CloudDesk</h1>
+        <p>IT Support Ticket Management System</p>
+    </header>
+
+    <main>
+        <!-- Dashboard statistics -->
+        <section class="dashboard">
+            <div class="stat-card">
+                <h3>Total Tickets</h3>
+                <p id="total-tickets">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Open Tickets</h3>
+                <p id="open-tickets">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Closed Tickets</h3>
+                <p id="closed-tickets">0</p>
+            </div>
+        </section>
+
+        <!-- Create a ticket -->
+        <section class="form-section">
+            <h2>Create New Ticket</h2>
+
+            <form id="ticket-form">
+                <label for="title">Title</label>
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="Enter ticket title"
+                    required
+                >
+
+                <label for="description">Description</label>
+                <textarea
+                    id="description"
+                    placeholder="Describe the issue"
+                    required
+                ></textarea>
+
+                <label for="priority">Priority</label>
+                <select id="priority">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                </select>
+
+                <button type="submit">Create Ticket</button>
+            </form>
+        </section>
+
+        <!-- Ticket list -->
+        <section class="tickets-section">
+            <h2>Support Tickets</h2>
+
+            <input
+                type="text"
+                id="search"
+                placeholder="Search tickets..."
+            >
+
+            <div id="ticket-list">
+                <p>Tickets will appear here.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
