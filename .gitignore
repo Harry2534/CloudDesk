@@ -6,3 +6,5 @@ __pycache__/
 kubernetes/postgres-secret.yamlcompose.yaml
 
 /compose.yaml
+
+/kubernetes/postgres-secret.yaml
