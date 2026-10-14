@@ -47,7 +47,7 @@ class TicketUpdate(BaseModel):
 
 @app.get("/")
 def home():
-    return {"message": "Welcome to CloudDesk API"}
+    return {"message": "CloudDesk API v1.1"}
 
 
 # View all tickets

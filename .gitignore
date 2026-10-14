@@ -2,3 +2,7 @@
 __pycache__/
 *.pyc
 .env
+# Local Kubernetes credentials
+kubernetes/postgres-secret.yamlcompose.yaml
+
+/compose.yaml
