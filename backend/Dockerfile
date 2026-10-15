@@ -1,28 +1,15 @@
-
 FROM python:3.12-slim
 
 WORKDIR /app
 
+# Install backend dependencies.
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY main.py database.py models.py ./
+# Include the database initialization script.
+COPY main.py database.py models.py create_tables.py ./
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-FROM python:3.12-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY main.py database.py models.py ./
-
-EXPOSE 8000
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Create missing database tables before starting FastAPI.
+CMD ["sh", "-c", "python create_tables.py && exec uvicorn main:app --host 0.0.0.0 --port 8000"]

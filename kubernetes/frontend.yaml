@@ -4,14 +4,32 @@ metadata:
   name: clouddesk-frontend
 spec:
   replicas: 2
+
+  # Update one replica at a time without creating extra pods.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
   selector:
     matchLabels:
       app: clouddesk-frontend
+
   template:
     metadata:
       labels:
         app: clouddesk-frontend
     spec:
+      # Place frontend replicas on different Kubernetes nodes.
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: clouddesk-frontend
+              topologyKey: kubernetes.io/hostname
+
       containers:
         - name: frontend
           image: clouddesk-frontend:1.1
@@ -31,11 +49,10 @@ kind: Service
 metadata:
   name: clouddesk-frontend
 spec:
-  type: NodePort
   selector:
     app: clouddesk-frontend
   ports:
-    - protocol: TCP
-      port: 80
+    - port: 80
       targetPort: 80
       nodePort: 30080
+  type: NodePort
