@@ -1,10 +1,29 @@
+
+# Python
 .venv/
 __pycache__/
 *.pyc
-.env
-# Local Kubernetes credentials
-kubernetes/postgres-secret.yamlcompose.yaml
 
+# Environment variables and secrets
+.env
+**/.env
+.env.*
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Authentication secrets
+backend/.jwt-secret
+
+# Kubernetes secrets
+kubernetes/postgres-secret.yaml
+
+# Private keys
+*.pem
+*.key
+
+# Local Docker configuration
 /compose.yaml
 
-/kubernetes/postgres-secret.yaml
+# README backup
+README.backup.md

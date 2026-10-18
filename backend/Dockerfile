@@ -7,7 +7,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Include the database initialization script.
-COPY main.py database.py models.py create_tables.py ./
+COPY main.py database.py models.py auth.py create_tables.py migrate_assignments.py promote_technician.py ./
 
 EXPOSE 8000
 

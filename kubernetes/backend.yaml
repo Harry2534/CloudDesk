@@ -1,4 +1,5 @@
-1RapiVersion: apps/v1
+
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: clouddesk-backend
@@ -32,16 +33,27 @@ spec:
 
       containers:
         - name: backend
-          image: clouddesk-backend:1.2
+          image: clouddesk-backend:1.3
           imagePullPolicy: IfNotPresent
+
           ports:
             - containerPort: 8000
+
           env:
+            # PostgreSQL database connection.
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: database-url
+
+            # JWT secret used for login authentication.
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: clouddesk-auth-secret
+                  key: jwt-secret
+
           readinessProbe:
             httpGet:
               path: /
@@ -57,7 +69,9 @@ metadata:
 spec:
   selector:
     app: clouddesk-backend
+
   ports:
     - port: 8000
       targetPort: 8000
+
   type: ClusterIP

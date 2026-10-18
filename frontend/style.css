@@ -212,3 +212,114 @@ button:hover {
         padding: 18px;
     }
 }
+
+
+/* Ensure hidden login, registration and app sections stay hidden. */
+[hidden] {
+    display: none !important;
+}
+
+/* Header account information */
+.header-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-panel {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+#logout-btn {
+    background: #475569;
+}
+
+#logout-btn:hover {
+    background: #334155;
+}
+
+/* Authentication screen */
+.auth-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 430px;
+    padding: 30px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+.auth-card h2 {
+    margin-bottom: 10px;
+}
+
+.auth-card > p {
+    color: #64748b;
+}
+
+.link-button {
+    background: transparent;
+    color: #2563eb;
+    padding: 8px 0;
+    margin-top: 12px;
+}
+
+.link-button:hover {
+    background: transparent;
+    text-decoration: underline;
+}
+
+.form-hint {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.message {
+    color: #b91c1c;
+    font-size: 14px;
+}
+
+.message:empty {
+    display: none;
+}
+
+/* Ticket assignment controls */
+.ticket-assignment {
+    margin: 15px 0;
+}
+
+.ticket-assignment label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.assignment-select {
+    max-width: 300px;
+}
+
+@media (max-width: 650px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .auth-card {
+        padding: 20px;
+    }
+}
+
+/* Always hide elements marked as hidden */
+[hidden] {
+    display: none !important;
+}

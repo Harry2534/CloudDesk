@@ -32,7 +32,7 @@ spec:
 
       containers:
         - name: frontend
-          image: clouddesk-frontend:1.1
+          image: clouddesk-frontend:1.2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
