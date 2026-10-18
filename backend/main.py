@@ -72,6 +72,7 @@ def user_response(user: User):
     }
 
 
+
 def ticket_response(ticket: Ticket):
     return {
         "id": ticket.id,
@@ -80,9 +81,12 @@ def ticket_response(ticket: Ticket):
         "status": ticket.status,
         "priority": ticket.priority,
         "created_by_id": ticket.created_by_id,
+        "created_by_name": ticket.creator.name if ticket.creator else None,
+        "created_by_email": ticket.creator.email if ticket.creator else None,
         "assigned_to_id": ticket.assigned_to_id,
         "assigned_to": ticket.assignee.name if ticket.assignee else None,
     }
+
 
 
 @app.get("/")

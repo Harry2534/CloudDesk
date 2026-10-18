@@ -240,7 +240,8 @@ function displayTickets() {
         ticket.description.toLowerCase().includes(query) ||
         ticket.priority.toLowerCase().includes(query) ||
         ticket.status.toLowerCase().includes(query) ||
-        (ticket.assigned_to ?? "").toLowerCase().includes(query)
+        (ticket.assigned_to ?? "").toLowerCase().includes(query) ||
+        (ticket.created_by_email ?? "").toLowerCase().includes(query)
     );
 
     if (filtered.length === 0) {
@@ -286,12 +287,31 @@ function displayTickets() {
               `
             : "";
 
-        return `
-            <div class="ticket-card">
-                <h3>#${ticket.id} - ${escapeHTML(ticket.title)}</h3>
-                <p>${escapeHTML(ticket.description)}</p>
+        
+            return `
+                <div class="ticket-card">
+                    <h3>#${ticket.id} - ${escapeHTML(ticket.title)}</h3>
+                    <p>${escapeHTML(ticket.description)}</p>
 
-                <div class="ticket-meta">
+                    ${isTechnician() ? `
+                        <div class="ticket-contact">
+                            <p>
+                                <strong>Submitted by:</strong>
+                                ${escapeHTML(ticket.created_by_name || "Unknown")}
+                            </p>
+                            <p>
+                                <strong>Email:</strong>
+                                ${ticket.created_by_email
+                                    ? `<a href="mailto:${encodeURIComponent(ticket.created_by_email)}?subject=${encodeURIComponent(`CloudDesk Ticket #${ticket.id} - ${ticket.title}`)}">
+                                        ${escapeHTML(ticket.created_by_email)}
+                                    </a>`
+                                    : "Not available"}
+                            </p>
+                        </div>
+                    ` : ""}
+
+                    <div class="ticket-meta">
+
                     <span class="badge">
                         ${escapeHTML(ticket.status)}
                     </span>

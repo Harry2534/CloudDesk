@@ -323,3 +323,18 @@ button:hover {
 [hidden] {
     display: none !important;
 }
+
+.ticket-contact {
+    margin: 12px 0;
+    padding: 12px;
+    background: rgba(128, 128, 128, 0.08);
+    border-radius: 8px;
+}
+
+.ticket-contact p {
+    margin: 4px 0;
+}
+
+.ticket-contact a {
+    overflow-wrap: anywhere;
+}
