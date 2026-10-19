@@ -338,3 +338,8 @@ button:hover {
 .ticket-contact a {
     overflow-wrap: anywhere;
 }
+
+/* Ensure JavaScript-hidden sections remain hidden */
+[hidden] {
+    display: none !important;
+}
