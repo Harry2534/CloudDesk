@@ -12,6 +12,10 @@ const userPanel = document.getElementById("user-panel");
 const ticketForm = document.getElementById("ticket-form");
 const ticketList = document.getElementById("ticket-list");
 const searchInput = document.getElementById("search");
+const ticketFilters = document.getElementById("ticket-filters");
+const assignmentFilter = document.getElementById("assignment-filter");
+const priorityFilter = document.getElementById("priority-filter");
+const statusFilter = document.getElementById("status-filter");
 const authMessage = document.getElementById("auth-message");
 const appMessage = document.getElementById("app-message");
 
@@ -85,7 +89,15 @@ function showApp() {
         `${currentUser.name} (${isTechnician() ? "IT Technician" : "Employee"})`;
 
     document.getElementById("tickets-heading").textContent =
-        isTechnician() ? "All Support Tickets" : "My Support Tickets";
+        isTechnician() ? "My Assigned Tickets" : "My Support Tickets";
+
+    ticketFilters.hidden = !isTechnician();
+
+    if (isTechnician()) {
+        assignmentFilter.value = "mine";
+        priorityFilter.value = "all";
+        statusFilter.value = "all";
+    }
 }
 
 function logout() {
@@ -172,6 +184,7 @@ document.getElementById("login-form").addEventListener(
 
             accessToken = result.access_token;
             currentUser = result.user;
+            console.log("Logged-in user:", currentUser);
 
             document.getElementById("login-form").reset();
 
@@ -232,17 +245,51 @@ function technicianOptions(assignedId) {
     `).join("");
 }
 
+
 function displayTickets() {
     const query = searchInput.value.trim().toLowerCase();
 
-    const filtered = tickets.filter(ticket =>
-        ticket.title.toLowerCase().includes(query) ||
-        ticket.description.toLowerCase().includes(query) ||
-        ticket.priority.toLowerCase().includes(query) ||
-        ticket.status.toLowerCase().includes(query) ||
-        (ticket.assigned_to ?? "").toLowerCase().includes(query) ||
-        (ticket.created_by_email ?? "").toLowerCase().includes(query)
-    );
+    const filtered = tickets.filter(ticket => {
+        const matchesSearch =
+            ticket.title.toLowerCase().includes(query) ||
+            ticket.description.toLowerCase().includes(query) ||
+            ticket.priority.toLowerCase().includes(query) ||
+            ticket.status.toLowerCase().includes(query) ||
+            (ticket.assigned_to ?? "").toLowerCase().includes(query) ||
+            (ticket.created_by_email ?? "").toLowerCase().includes(query);
+
+        if (!matchesSearch) return false;
+
+        // Employees keep their existing ticket view.
+        if (!isTechnician()) return true;
+
+        // Filter tickets by assignment.
+        const assignment = assignmentFilter.value;
+
+        const matchesAssignment =
+            assignment === "all" ||
+            (
+                assignment === "mine" &&
+                ticket.assigned_to_id != null &&
+                Number(ticket.assigned_to_id) === Number(currentUser.id)
+            ) ||
+            (
+                assignment === "unassigned" &&
+                ticket.assigned_to_id == null
+            );
+
+        // Filter tickets by priority.
+        const matchesPriority =
+            priorityFilter.value === "all" ||
+            ticket.priority === priorityFilter.value;
+
+        // Filter tickets by status.
+        const matchesStatus =
+            statusFilter.value === "all" ||
+            ticket.status === statusFilter.value;
+
+        return matchesAssignment && matchesPriority && matchesStatus;
+    });
 
     if (filtered.length === 0) {
         ticketList.textContent = "No matching tickets found.";
@@ -287,31 +334,29 @@ function displayTickets() {
               `
             : "";
 
-        
-            return `
-                <div class="ticket-card">
-                    <h3>#${ticket.id} - ${escapeHTML(ticket.title)}</h3>
-                    <p>${escapeHTML(ticket.description)}</p>
+        return `
+            <div class="ticket-card">
+                <h3>#${ticket.id} - ${escapeHTML(ticket.title)}</h3>
+                <p>${escapeHTML(ticket.description)}</p>
 
-                    ${isTechnician() ? `
-                        <div class="ticket-contact">
-                            <p>
-                                <strong>Submitted by:</strong>
-                                ${escapeHTML(ticket.created_by_name || "Unknown")}
-                            </p>
-                            <p>
-                                <strong>Email:</strong>
-                                ${ticket.created_by_email
-                                    ? `<a href="mailto:${encodeURIComponent(ticket.created_by_email)}?subject=${encodeURIComponent(`CloudDesk Ticket #${ticket.id} - ${ticket.title}`)}">
-                                        ${escapeHTML(ticket.created_by_email)}
-                                    </a>`
-                                    : "Not available"}
-                            </p>
-                        </div>
-                    ` : ""}
+                ${isTechnician() ? `
+                    <div class="ticket-contact">
+                        <p>
+                            <strong>Submitted by:</strong>
+                            ${escapeHTML(ticket.created_by_name || "Unknown")}
+                        </p>
+                        <p>
+                            <strong>Email:</strong>
+                            ${ticket.created_by_email
+                                ? `<a href="mailto:${encodeURIComponent(ticket.created_by_email)}?subject=${encodeURIComponent(`CloudDesk Ticket #${ticket.id} - ${ticket.title}`)}">
+                                    ${escapeHTML(ticket.created_by_email)}
+                                </a>`
+                                : "Not available"}
+                        </p>
+                    </div>
+                ` : ""}
 
-                    <div class="ticket-meta">
-
+                <div class="ticket-meta">
                     <span class="badge">
                         ${escapeHTML(ticket.status)}
                     </span>
@@ -334,6 +379,7 @@ function displayTickets() {
         `;
     }).join("");
 }
+
 
 // All logged-in users can create tickets.
 ticketForm.addEventListener("submit", async event => {
@@ -450,4 +496,9 @@ ticketList.addEventListener("click", async event => {
 
 // Keep tokens in memory rather than browser storage.
 // Users log in again after refreshing the page.
+
+[assignmentFilter, priorityFilter, statusFilter].forEach(filter => {
+    filter.addEventListener("change", displayTickets);
+});
+
 showAuth();

@@ -117,6 +117,34 @@
                 <input id="search" type="search"
                        placeholder="Search tickets...">
 
+                <!-- Technician ticket filters -->
+                <div class="ticket-filters" id="ticket-filters" hidden>
+
+                    <select id="assignment-filter"
+                            aria-label="Filter by assignment">
+                        <option value="mine">My Tickets</option>
+                        <option value="all">All Tickets</option>
+                        <option value="unassigned">Unassigned</option>
+                    </select>
+
+                    <select id="priority-filter"
+                            aria-label="Filter by priority">
+                        <option value="all">All Priorities</option>
+                        <option value="High">High Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="Low">Low Priority</option>
+                    </select>
+
+                    <select id="status-filter"
+                            aria-label="Filter by status">
+                        <option value="all">All Statuses</option>
+                        <option value="Open">Open</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+
+                </div>
+
                 <p id="app-message" class="message" role="status"></p>
                 <div id="ticket-list">
                     <p>Tickets will appear here.</p>
