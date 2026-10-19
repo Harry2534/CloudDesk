@@ -27,7 +27,7 @@ INSERT INTO seed_users VALUES ('Jordan Reed', 'demo.tech02@example.com', 'techni
 INSERT INTO seed_users VALUES ('Sam Parker', 'demo.tech03@example.com', 'technician');
 INSERT INTO seed_users VALUES ('Casey Brooks', 'demo.tech04@example.com', 'technician');
 INSERT INTO seed_users VALUES ('Taylor Evans', 'demo.tech05@example.com', 'technician');
-INSERT INTO users (name,email,password_hash,role) SELECT s.name,s.email,'$2y$10$HiSafEGM.xlWnmcUNV8IWOKY5ECOMzDJk6O7A4KpV5cYV6qFKkygy',s.role FROM seed_users s ON CONFLICT (email) DO NOTHING;
+INSERT INTO users (name,email,password_hash,role) SELECT s.name,s.email,'$argon2id$v=19$m=65536,t=3,p=4$Kk/IwCK/aR2KmOvJPwrYDQ$u80NmSZA2Kvwybla97f3G43eVtRsE0dyh+/JYzufQEg',s.role FROM seed_users s ON CONFLICT (email) DO NOTHING;
 CREATE TEMP TABLE seed_tickets (title text, description text, status text, priority text, creator_email text, assignee_email text) ON COMMIT DROP;
 INSERT INTO seed_tickets VALUES ('[DEMO-001] Unable to connect to office Wi-Fi', 'Laptop disconnects from the office wireless network during meetings. Demo ticket #001; this is fictional test data for CloudDesk.', 'Open', 'Medium', 'demo.employee01@example.com', 'demo.tech01@example.com');
 INSERT INTO seed_tickets VALUES ('[DEMO-002] Password reset required', 'Unable to sign in after password expiry; requesting a reset. Demo ticket #002; this is fictional test data for CloudDesk.', 'Open', 'Medium', 'demo.employee02@example.com', 'demo.tech02@example.com');
