@@ -1,157 +1,326 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CloudDesk | IT Support</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script>
+        // Apply the saved theme before the page paints.
+        try {
+            const saved = localStorage.getItem("clouddesk-theme");
+            if (saved) document.documentElement.dataset.theme = saved;
+        } catch {}
+    </script>
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <div>
-                <h1>CloudDesk</h1>
-                <p>IT Support Ticket Management System</p>
-            </div>
-            <div id="user-panel" class="user-panel" hidden>
-                <span id="user-info"></span>
-                <button id="logout-btn" type="button">Log Out</button>
-            </div>
-        </div>
-    </header>
 
-    <main>
-        <!-- Authentication -->
-        <section id="auth-section" class="auth-section">
+    <!-- ============ Authentication ============ -->
+    <section id="auth-section" class="auth">
+        <div class="auth-brand">
+            <div class="brand brand-light">
+                <span class="brand-mark" data-icon="cloud"></span>
+                <span>CloudDesk</span>
+            </div>
+            <div class="auth-brand-copy">
+                <h1>IT support without the back-and-forth.</h1>
+                <p>Raise an issue in seconds, see who's on it, and know the moment it's fixed.</p>
+            </div>
+            <ul class="auth-points">
+                <li><span data-icon="check"></span>Track every ticket from open to closed</li>
+                <li><span data-icon="check"></span>Technicians triage, assign and resolve</li>
+                <li><span data-icon="check"></span>One place for your whole IT queue</li>
+            </ul>
+        </div>
+
+        <div class="auth-panel">
             <div class="auth-card">
-                <h2 id="auth-heading">Log In</h2>
-                <p id="auth-description">
+                <div class="brand auth-mobile-brand">
+                    <span class="brand-mark" data-icon="cloud"></span>
+                    <span>CloudDesk</span>
+                </div>
+
+                <h2 id="auth-heading">Welcome back</h2>
+                <p id="auth-description" class="muted">
                     Sign in to manage your support tickets.
                 </p>
 
-                <form id="login-form">
-                    <label for="login-email">Email</label>
-                    <input id="login-email" type="email"
-                           autocomplete="email" required>
-
-                    <label for="login-password">Password</label>
-                    <input id="login-password" type="password"
-                           autocomplete="current-password" required>
-
-                    <button type="submit">Log In</button>
+                <form id="login-form" class="stack">
+                    <div class="field">
+                        <label for="login-email">Email</label>
+                        <input id="login-email" type="email" placeholder="you@company.com"
+                               autocomplete="email" required>
+                    </div>
+                    <div class="field">
+                        <label for="login-password">Password</label>
+                        <input id="login-password" type="password" placeholder="••••••••"
+                               autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Log in</button>
                 </form>
 
-                <form id="register-form" hidden>
-                    <label for="register-name">Full Name</label>
-                    <input id="register-name" type="text"
-                           maxlength="100" autocomplete="name" required>
-
-                    <label for="register-email">Email</label>
-                    <input id="register-email" type="email"
-                           autocomplete="email" required>
-
-                    <label for="register-password">Password</label>
-                    <input id="register-password" type="password"
-                           minlength="8" maxlength="128"
-                           autocomplete="new-password" required>
-
+                <form id="register-form" class="stack" hidden>
+                    <div class="field">
+                        <label for="register-name">Full name</label>
+                        <input id="register-name" type="text" placeholder="Jane Smith"
+                               maxlength="100" autocomplete="name" required>
+                    </div>
+                    <div class="field">
+                        <label for="register-email">Email</label>
+                        <input id="register-email" type="email" placeholder="you@company.com"
+                               autocomplete="email" required>
+                    </div>
+                    <div class="field">
+                        <label for="register-password">Password</label>
+                        <input id="register-password" type="password" placeholder="At least 8 characters"
+                               minlength="8" maxlength="128"
+                               autocomplete="new-password" required>
+                    </div>
                     <p class="form-hint">
+                        <span data-icon="info"></span>
                         New accounts are registered as Employees.
                     </p>
-
-                    <button type="submit">Create Account</button>
+                    <button type="submit" class="btn btn-primary btn-block">Create account</button>
                 </form>
 
                 <p id="auth-message" class="message" role="status"></p>
 
-                <button id="toggle-auth" class="link-button" type="button">
-                    Don't have an account? Register
+                <p class="auth-switch">
+                    <span id="toggle-auth-text">Don't have an account?</span>
+                    <button id="toggle-auth" class="link-button" type="button">Register</button>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ Application ============ -->
+    <div id="app-section" class="app" hidden>
+
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-mark" data-icon="cloud"></span>
+                <span>CloudDesk</span>
+            </div>
+
+            <nav class="nav">
+                <span class="nav-label">Workspace</span>
+                <a class="nav-item active" href="#" aria-current="page">
+                    <span data-icon="ticket"></span>
+                    <span id="nav-tickets-label">My tickets</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-foot">
+                <div class="user-chip">
+                    <span class="avatar" id="sidebar-avatar"></span>
+                    <div class="user-chip-text">
+                        <strong id="sidebar-name"></strong>
+                        <span id="sidebar-role"></span>
+                    </div>
+                </div>
+                <button id="logout-btn" type="button" class="btn btn-ghost btn-block">
+                    <span data-icon="logout"></span>Log out
                 </button>
             </div>
-        </section>
+        </aside>
 
-        <!-- Logged-in application -->
-        <div id="app-section" hidden>
-            <section class="dashboard">
-                <div class="stat-card">
-                    <h3>Total Tickets</h3>
-                    <p id="total-tickets">0</p>
+        <div class="main">
+            <header class="topbar">
+                <div class="brand topbar-brand">
+                    <span class="brand-mark" data-icon="cloud"></span>
+                    <span>CloudDesk</span>
                 </div>
-                <div class="stat-card">
-                    <h3>Open Tickets</h3>
-                    <p id="open-tickets">0</p>
+                <div class="crumbs">
+                    <span>Workspace</span>
+                    <span data-icon="chevron-right"></span>
+                    <strong>Tickets</strong>
                 </div>
-                <div class="stat-card">
-                    <h3>Closed Tickets</h3>
-                    <p id="closed-tickets">0</p>
+                <div class="topbar-actions">
+                    <button id="theme-toggle" type="button" class="icon-btn"
+                            aria-label="Toggle dark mode">
+                        <span data-icon="moon"></span>
+                    </button>
+                    <div id="user-panel" class="user-panel" hidden>
+                        <span class="avatar" id="topbar-avatar"></span>
+                        <span id="user-info" class="sr-only"></span>
+                    </div>
+                    <button id="logout-btn-mobile" type="button" class="icon-btn mobile-only"
+                            aria-label="Log out">
+                        <span data-icon="logout"></span>
+                    </button>
                 </div>
-            </section>
+            </header>
 
-            <section class="form-section">
-                <h2>Create New Ticket</h2>
-                <form id="ticket-form">
-                    <label for="title">Title</label>
-                    <input id="title" type="text" maxlength="200"
-                           placeholder="Enter ticket title" required>
+            <main class="content">
+                <div class="page-head">
+                    <div>
+                        <h1 id="page-title">My support tickets</h1>
+                        <p id="page-subtitle" class="muted">Raise an issue and track it until it's resolved.</p>
+                    </div>
+                    <button id="new-ticket-btn" type="button" class="btn btn-primary">
+                        <span data-icon="plus"></span>New ticket
+                    </button>
+                </div>
 
-                    <label for="description">Description</label>
-                    <textarea id="description"
-                              placeholder="Describe the issue"
-                              required></textarea>
+                <section class="stats">
+                    <div class="stat">
+                        <div class="stat-label"><span data-icon="inbox"></span>Total</div>
+                        <p id="total-tickets" class="stat-value">0</p>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label"><span class="dot dot-open"></span>Open</div>
+                        <p id="open-tickets" class="stat-value">0</p>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label"><span class="dot dot-progress"></span>In progress</div>
+                        <p id="progress-tickets" class="stat-value">0</p>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label"><span class="dot dot-closed"></span>Closed</div>
+                        <p id="closed-tickets" class="stat-value">0</p>
+                    </div>
+                </section>
 
-                    <label for="priority">Priority</label>
-                    <select id="priority">
-                        <option value="Low">Low</option>
-                        <option value="Medium" selected>Medium</option>
-                        <option value="High">High</option>
-                    </select>
+                <section class="panel">
+                    <div class="toolbar">
+                        <div class="search">
+                            <span data-icon="search"></span>
+                            <input id="search" type="search"
+                                   placeholder="Search by title, description, person or ID…"
+                                   aria-label="Search tickets">
+                        </div>
 
-                    <button type="submit">Create Ticket</button>
-                </form>
-            </section>
+                        <!-- Technician ticket filters -->
+                        <div class="ticket-filters" id="ticket-filters" hidden>
+                            <div class="segmented" role="group" aria-label="Filter by assignment">
+                                <button type="button" data-assignment="mine" class="active">
+                                    Mine <span class="count" id="count-mine">0</span>
+                                </button>
+                                <button type="button" data-assignment="unassigned">
+                                    Unassigned <span class="count" id="count-unassigned">0</span>
+                                </button>
+                                <button type="button" data-assignment="all">
+                                    All <span class="count" id="count-all">0</span>
+                                </button>
+                            </div>
+                            <!-- Kept as hidden select so filter logic stays in one place -->
+                            <select id="assignment-filter" hidden aria-hidden="true">
+                                <option value="mine">My Tickets</option>
+                                <option value="all">All Tickets</option>
+                                <option value="unassigned">Unassigned</option>
+                            </select>
 
-            <section class="tickets-section">
-                <h2 id="tickets-heading">My Support Tickets</h2>
+                            <label class="select-pill">
+                                <span data-icon="flag"></span>
+                                <select id="priority-filter" aria-label="Filter by priority">
+                                    <option value="all">Any priority</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
 
-                <input id="search" type="search"
-                       placeholder="Search tickets...">
-
-                <!-- Technician ticket filters -->
-                <div class="ticket-filters" id="ticket-filters" hidden>
-
-                    <select id="assignment-filter"
-                            aria-label="Filter by assignment">
-                        <option value="mine">My Tickets</option>
-                        <option value="all">All Tickets</option>
-                        <option value="unassigned">Unassigned</option>
-                    </select>
-
-                    <select id="priority-filter"
-                            aria-label="Filter by priority">
-                        <option value="all">All Priorities</option>
-                        <option value="High">High Priority</option>
-                        <option value="Medium">Medium Priority</option>
-                        <option value="Low">Low Priority</option>
-                    </select>
-
-                    <select id="status-filter"
-                            aria-label="Filter by status">
+                    <div class="tabs" role="tablist" aria-label="Filter by status">
+                        <button type="button" role="tab" data-status="all" class="active">All</button>
+                        <button type="button" role="tab" data-status="Open">Open</button>
+                        <button type="button" role="tab" data-status="In Progress">In progress</button>
+                        <button type="button" role="tab" data-status="Closed">Closed</button>
+                    </div>
+                    <select id="status-filter" hidden aria-hidden="true">
                         <option value="all">All Statuses</option>
                         <option value="Open">Open</option>
                         <option value="In Progress">In Progress</option>
                         <option value="Closed">Closed</option>
                     </select>
 
+                    <p id="app-message" class="message banner" role="status"></p>
+
+                    <div id="ticket-list" class="ticket-list"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- ============ Ticket detail drawer ============ -->
+    <div id="drawer" class="drawer" hidden>
+        <div class="drawer-backdrop" data-close></div>
+        <aside class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+            <div id="drawer-body"></div>
+        </aside>
+    </div>
+
+    <!-- ============ Create / edit modal ============ -->
+    <div id="ticket-modal" class="modal" hidden>
+        <div class="modal-backdrop" data-close></div>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-head">
+                <h2 id="modal-title">New ticket</h2>
+                <button type="button" class="icon-btn" data-close aria-label="Close">
+                    <span data-icon="x"></span>
+                </button>
+            </div>
+
+            <form id="ticket-form" class="stack">
+                <div class="field">
+                    <label for="title">Title</label>
+                    <input id="title" type="text" maxlength="200"
+                           placeholder="e.g. Laptop won't connect to VPN" required>
                 </div>
 
-                <p id="app-message" class="message" role="status"></p>
-                <div id="ticket-list">
-                    <p>Tickets will appear here.</p>
+                <div class="field">
+                    <label for="description">Description</label>
+                    <textarea id="description"
+                              placeholder="What happened, what you expected, and anything you've already tried."
+                              required></textarea>
                 </div>
-            </section>
+
+                <div class="field" id="priority-field">
+                    <span class="label">Priority</span>
+                    <div class="priority-picker" role="radiogroup" aria-label="Priority">
+                        <label><input type="radio" name="priority-choice" value="Low">
+                            <span><i class="pri-icon pri-low"></i>Low</span></label>
+                        <label><input type="radio" name="priority-choice" value="Medium" checked>
+                            <span><i class="pri-icon pri-medium"></i>Medium</span></label>
+                        <label><input type="radio" name="priority-choice" value="High">
+                            <span><i class="pri-icon pri-high"></i>High</span></label>
+                    </div>
+                    <select id="priority" hidden aria-hidden="true">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+
+                <p id="modal-message" class="message" role="status"></p>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="modal-submit">Create ticket</button>
+                </div>
+            </form>
         </div>
-    </main>
+    </div>
+
+    <!-- ============ Confirm dialog ============ -->
+    <div id="confirm-modal" class="modal" hidden>
+        <div class="modal-backdrop" data-close></div>
+        <div class="modal-card modal-sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+            <div class="confirm-icon"><span data-icon="trash"></span></div>
+            <h2 id="confirm-title">Delete ticket?</h2>
+            <p id="confirm-text" class="muted"></p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-ok">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
 
     <script src="script.js"></script>
 </body>

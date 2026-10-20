@@ -33,7 +33,7 @@ spec:
 
       containers:
         - name: backend
-          image: clouddesk-backend:1.3
+          image: clouddesk-backend:1.4
           imagePullPolicy: IfNotPresent
 
           ports:

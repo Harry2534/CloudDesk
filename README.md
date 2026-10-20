@@ -115,13 +115,13 @@ The backend uses SQLAlchemy to interact with PostgreSQL.
 7. Container Images
 Current application image versions:
 - Backend: `clouddesk-backend:1.4`
-- Frontend: `clouddesk-frontend:1.5`
+- Frontend: `clouddesk-frontend:1.6`
 - Database: `postgres:17`
 The frontend Docker image uses Nginx to serve the website.
 The backend Docker image uses Python 3.12 and starts FastAPI through Uvicorn.
 The backend container runs `create_tables.py` before starting the API.
 Images are built using Docker, transferred to both Google Cloud VMs and imported into the K3s containerd image store.
-The current project does not use a remote container registry.
+The current project does not use a remote container registry. Each node must have the application images imported into its K3s containerd store before deploying. The frontend was updated to v1.6 for the latest UI changes; the backend remains v1.4.
 8. Deployment Instructions
 Prerequisites
 - Google Cloud project with billing enabled
@@ -134,12 +134,12 @@ Prerequisites
 - Google Cloud CLI configured
 - CloudDesk source code
 Step 1 — Build application images
-From the CloudDesk project directory on the development computer:
+From the CloudDesk project directory on the development computer. The version tags must match `kubernetes/frontend.yaml` and `kubernetes/backend.yaml`:
 ```bash
 
 docker build -t clouddesk-backend:1.4 ./backend
 
-docker build -t clouddesk-frontend:1.5 ./frontend
+docker build -t clouddesk-frontend:1.6 ./frontend
 
 ```
 Step 2 — Export images
@@ -147,20 +147,20 @@ Step 2 — Export images
 
 docker save clouddesk-backend:1.4 | gzip > /tmp/clouddesk-backend-1.4.tar.gz
 
-docker save clouddesk-frontend:1.5 | gzip > /tmp/clouddesk-frontend-1.5.tar.gz
+docker save clouddesk-frontend:1.6 | gzip > /tmp/clouddesk-frontend-1.6.tar.gz
 
 ```
 Step 3 — Transfer images to both VMs
 For the main VM:
 ```bash
 
-gcloud compute scp /tmp/clouddesk-backend-1.4.tar.gz /tmp/clouddesk-frontend-1.5.tar.gz clouddesk-vm:~/ --zone=australia-southeast1-b
+gcloud compute scp /tmp/clouddesk-backend-1.4.tar.gz /tmp/clouddesk-frontend-1.6.tar.gz clouddesk-vm:~/ --zone=australia-southeast1-b
 
 ```
 For the worker VM:
 ```bash
 
-gcloud compute scp /tmp/clouddesk-backend-1.4.tar.gz /tmp/clouddesk-frontend-1.5.tar.gz clouddesk-worker:~/ --zone=australia-southeast1-b --tunnel-through-iap
+gcloud compute scp /tmp/clouddesk-backend-1.4.tar.gz /tmp/clouddesk-frontend-1.6.tar.gz clouddesk-worker:~/ --zone=australia-southeast1-b --tunnel-through-iap
 
 ```
 Step 4 — Import images into K3s
@@ -169,11 +169,11 @@ Run on both VMs:
 
 gunzip -c ~/clouddesk-backend-1.4.tar.gz | sudo k3s ctr images import -
 
-gunzip -c ~/clouddesk-frontend-1.5.tar.gz | sudo k3s ctr images import -
+gunzip -c ~/clouddesk-frontend-1.6.tar.gz | sudo k3s ctr images import -
 
 ```
 Step 5 — Create Kubernetes Secrets
-On the main VM, generate database and JWT credentials:
+For a **new** deployment only, generate database and JWT credentials on the main VM. These commands use fresh random values; do not run them to reset the Secrets of an existing database:
 ```bash
 
 DB_PASSWORD=$(openssl rand -hex 24)
@@ -199,7 +199,7 @@ sudo k3s kubectl create secret generic clouddesk-auth-secret \
   --from-literal=jwt-secret="$JWT_SECRET"
 
 ```
-For an existing deployment, preserve its original credentials and Secrets. Do not replace database credentials without coordinating a database password change.
+For an existing deployment, preserve its original credentials and Secrets. Do not replace database credentials without coordinating a database password change. For a new deployment, ensure the PostgreSQL manifest, backend environment configuration and Secret keys match; creating a Secret does not automatically change a password in an existing PostgreSQL data directory.
 Step 6 — Deploy PostgreSQL
 Transfer the Kubernetes YAML files to the main VM, then run:
 ```bash
@@ -375,7 +375,7 @@ CloudDesk/
 ├── README.md
 └── .gitignore
 ```
-The local project also contains development-only files such as `.env`, `backend/.env`, `backend/.jwt-secret`, and `kubernetes/postgres-secret.yaml`. These are omitted from the submission if they contain real credentials. The submitted configuration must not contain active secrets.
+The local project may contain development-only files such as `.env`, `backend/.env`, `backend/.jwt-secret`, and `kubernetes/postgres-secret.yaml`. These must be excluded from the submission if they contain real credentials. The submitted configuration must not contain active secrets. Do not commit generated Docker image archives, submission ZIPs, or local database volumes.
 14. Local Development with Docker Compose
 CloudDesk can also be run locally using Docker Compose, independently of the Google Cloud K3s cluster.
 Install Docker Engine and Docker Compose.
@@ -403,7 +403,7 @@ Potential improvements include:
 - Monitoring, logging and alerting.
 - Kubernetes resource limits and autoscaling.
 16. Assignment Demonstration
-The project demonstration can cover:
+The project demonstration can cover (perform each live test before claiming it passed):
 Background and motivation.
 Cloud architecture and two-node Kubernetes cluster.
 Frontend and backend containerisation.
