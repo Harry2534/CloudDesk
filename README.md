@@ -122,6 +122,174 @@ The backend Docker image uses Python 3.12 and starts FastAPI through Uvicorn.
 The backend container runs `create_tables.py` before starting the API.
 Images are built using Docker, transferred to both Google Cloud VMs and imported into the K3s containerd image store.
 The current project does not use a remote container registry. Each node must have the application images imported into its K3s containerd store before deploying. The frontend was updated to v1.6 for the latest UI changes; the backend remains v1.4.
+
+## 8A. First-Time Google Cloud and K3s Setup (new infrastructure)
+
+These instructions supplement Section 8 for a **new** deployment. They use the existing project's Google Cloud VM names and Sydney zone. Replace the project ID with your own; Google Cloud charges apply. The commands assume Ubuntu 22.04 and an existing default VPC. Run Google Cloud commands on your **local computer**, not inside a VM. Use test accounts only because the site is served over HTTP.
+
+### A. Configure Google Cloud CLI
+
+Install and authenticate the Google Cloud CLI, select a billing-enabled project, and enable Compute Engine:
+
+```bash
+gcloud auth login
+gcloud config set project YOUR_GCP_PROJECT_ID
+gcloud services enable compute.googleapis.com
+gcloud config set compute/zone australia-southeast1-b
+```
+
+### B. Create the two VMs
+
+Check whether these instance names already exist before creating them. These example commands use a public IP on the main VM and no external IP on the worker, matching the project architecture. Ubuntu image family and available machine types can change; adjust if needed.
+
+```bash
+gcloud compute instances create clouddesk-vm \
+  --zone=australia-southeast1-b \
+  --machine-type=e2-medium \
+  --image-family=ubuntu-2204-lts --image-project=ubuntu-os-cloud \
+  --boot-disk-size=20GB --boot-disk-type=pd-standard \
+  --tags=clouddesk-server
+
+gcloud compute instances create clouddesk-worker \
+  --zone=australia-southeast1-b \
+  --machine-type=e2-small \
+  --image-family=ubuntu-2204-lts --image-project=ubuntu-os-cloud \
+  --boot-disk-size=20GB --boot-disk-type=pd-standard \
+  --no-address --tags=clouddesk-worker
+```
+
+The worker without a public IP may need **Cloud NAT or another outbound-internet path** to download packages and the K3s installer. Configure that before installing K3s. IAP tunnelling is for SSH access; it does not provide general outbound internet connectivity.
+
+### C. Configure firewall rules
+
+The K3s worker must reach the server's **private IP** on TCP `6443`. K3s Flannel VXLAN networking normally needs UDP `8472` between nodes; K3s networking and metrics may also require TCP `10250` between nodes. Restrict these to your trusted private subnet, **not the public internet**. Replace `YOUR_VPC_CIDR` with the actual VPC subnet CIDR.
+
+```bash
+# Allow cluster node-to-node communication only from your VPC subnet.
+gcloud compute firewall-rules create clouddesk-k3s-internal \
+  --network=default --direction=INGRESS \
+  --action=ALLOW --rules=tcp:6443,tcp:10250,udp:8472 \
+  --source-ranges=YOUR_VPC_CIDR \
+  --target-tags=clouddesk-server,clouddesk-worker
+
+# Allow access to the frontend NodePort on the server.
+# For a demo, restrict source-ranges to your own public IP/32 when practical.
+gcloud compute firewall-rules create clouddesk-web \
+  --network=default --direction=INGRESS \
+  --action=ALLOW --rules=tcp:30080 \
+  --source-ranges=YOUR_PUBLIC_IP/32 \
+  --target-tags=clouddesk-server
+```
+
+If the firewall rules already exist, update or inspect them rather than recreating them. Google Cloud's IAP SSH access also needs a suitable firewall rule for TCP 22 from `35.235.240.0/20`, and IAM permissions for IAP tunnelling. Check your organisation's policies before opening access. Never expose PostgreSQL port `5432` publicly.
+
+### D. Install K3s on the server and join the worker
+
+From your local computer, SSH into the server:
+
+```bash
+gcloud compute ssh clouddesk-vm --zone=australia-southeast1-b
+```
+
+On **clouddesk-vm**:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y curl ca-certificates
+curl -sfL https://get.k3s.io | sh -
+sudo k3s kubectl get nodes
+sudo cat /var/lib/rancher/k3s/server/node-token
+```
+
+**Keep the node token private.** Copy it securely; do not paste it into your submission or commit it to Git. Obtain the server's internal IP from your local computer:
+
+```bash
+gcloud compute instances describe clouddesk-vm \
+  --zone=australia-southeast1-b \
+  --format='get(networkInterfaces[0].networkIP)'
+```
+
+SSH to the worker (from your local computer):
+
+```bash
+gcloud compute ssh clouddesk-worker \
+  --zone=australia-southeast1-b --tunnel-through-iap
+```
+
+On **clouddesk-worker**, substitute the private IP and token obtained above:
+
+```bash
+curl -sfL https://get.k3s.io | \
+  K3S_URL=https://SERVER_PRIVATE_IP:6443 \
+  K3S_TOKEN=SERVER_NODE_TOKEN sh -
+```
+
+Return to **clouddesk-vm** and verify both nodes are Ready:
+
+```bash
+sudo k3s kubectl get nodes -o wide
+```
+
+Do not continue until both nodes appear. If joining fails, verify outbound connectivity, firewall rules, private IP routing and the token. On the worker, `sudo journalctl -u k3s-agent -n 100 --no-pager` helps diagnose failures.
+
+### E. Copy Kubernetes manifests to the server
+
+From the local `CloudDesk/` directory:
+
+```bash
+gcloud compute scp --recurse ./kubernetes clouddesk-vm:~/ \
+  --zone=australia-southeast1-b
+```
+
+**Important:** The local `kubernetes/` folder must contain only the public deployment YAML files before using this command. Do **not** upload a local `postgres-secret.yaml` or other credential-bearing manifest. Alternatively, copy `backend.yaml`, `frontend.yaml` and `postgres.yaml` individually.
+
+Continue with the image-build, image-import, Secret and deployment steps in Section 8. For a first-time deployment, check that all images exist in **both** nodes' K3s containerd stores and that the image tags in the manifests match.
+
+### F. Validate and troubleshoot deployment
+
+On the K3s server:
+
+```bash
+sudo k3s kubectl get nodes
+sudo k3s kubectl get deployments
+sudo k3s kubectl get pods -o wide
+sudo k3s kubectl get services
+sudo k3s kubectl get pvc
+sudo k3s kubectl describe pod POD_NAME
+sudo k3s kubectl logs deployment/clouddesk-backend --tail=100
+```
+
+Expected workloads: two frontend pods, two backend pods and one PostgreSQL pod. If a pod reports `ImagePullBackOff`, confirm its image tag was imported into the node's K3s containerd store. If the backend cannot connect to PostgreSQL, compare the Kubernetes manifest's environment variable and Secret references with the actual Secret keys; also check database initialization logs. If pods are Pending, inspect anti-affinity constraints and node resources.
+
+For the external address, from the local computer:
+
+```bash
+gcloud compute instances describe clouddesk-vm \
+  --zone=australia-southeast1-b \
+  --format='get(networkInterfaces[0].accessConfigs[0].natIP)'
+```
+
+Open `http://SERVER_PUBLIC_IP:30080` from an IP permitted by the firewall. The external IP may change when the VM stops unless reserved.
+
+### G. Local Docker Compose setup
+
+For local development, inspect `compose.yaml` for the exact required environment variables and any environment-file references before running it. Create a **local, untracked** `.env` file with test credentials only if the Compose configuration requires one. Never commit or include it in the submission ZIP.
+
+```bash
+docker compose config --quiet
+docker compose up --build -d
+docker compose ps
+```
+
+Open `http://localhost:5500`. If the configuration validation fails, supply the environment variables indicated by `compose.yaml`. Local Compose and cloud K3s use different Nginx upstream configuration files.
+
+### Reproducibility notes
+
+- **Not fully independently verified:** These fresh-install instructions are provided for reproducibility but have not been tested end-to-end on newly created VMs.
+- **Confirm Secret references:** Verify the exact Secret names, keys and environment variable names in `kubernetes/backend.yaml` and `kubernetes/postgres.yaml` before following the example Secret commands in Section 8. They must match exactly.
+- **Single points of failure:** PostgreSQL, its local-path storage, the K3s server and the main VM's public entry point are not highly available. Replication of the frontend and backend alone does not provide full service availability if the main VM fails.
+- **Security:** This is an academic demonstration configuration. Add HTTPS, stronger network controls, secret management, backups and monitoring before any real-world deployment.
+
 8. Deployment Instructions
 Prerequisites
 - Google Cloud project with billing enabled
